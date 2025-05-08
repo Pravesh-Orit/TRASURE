@@ -1,0 +1,1 @@
+-- SQL for schema initialization

@@ -1,14 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
-  const Inventory = sequelize.define("Inventory", {
+  const TierPlan = sequelize.define("TierPlan", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    providerId: DataTypes.UUID,
     name: DataTypes.STRING,
-    quantity: DataTypes.INTEGER,
-    threshold: DataTypes.INTEGER,
+    responseTime: DataTypes.INTEGER,
+    coverageArea: DataTypes.STRING,
+    discountRate: DataTypes.FLOAT,
   });
-  return Inventory;
+  return TierPlan;
 };

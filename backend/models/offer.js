@@ -1,14 +1,15 @@
 module.exports = (sequelize, DataTypes) => {
-  const Inventory = sequelize.define("Inventory", {
+  const Offer = sequelize.define("Offer", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     providerId: DataTypes.UUID,
-    name: DataTypes.STRING,
-    quantity: DataTypes.INTEGER,
-    threshold: DataTypes.INTEGER,
+    code: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    eligibility: DataTypes.JSONB,
+    active: DataTypes.BOOLEAN,
   });
-  return Inventory;
+  return Offer;
 };

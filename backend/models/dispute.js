@@ -1,14 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  const Appointment = sequelize.define("Appointment", {
+  const Dispute = sequelize.define("Dispute", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     serviceRequestId: DataTypes.UUID,
-    date: DataTypes.DATE,
-    timeSlot: DataTypes.STRING,
-    serviceType: DataTypes.STRING,
+    reason: DataTypes.TEXT,
+    status: DataTypes.STRING,
   });
-  return Appointment;
+  return Dispute;
 };

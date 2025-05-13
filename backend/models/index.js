@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const Sequelize = require("sequelize");
 const config = require("../config/config");
 const sequelize = new Sequelize(
@@ -54,3 +55,6 @@ db.User.hasMany(db.Payment);
 db.Payment.belongsTo(db.User);
 
 module.exports = db;
+=======
+// Sequelize initialization and associations
+>>>>>>> 4c8c205 (backend module structure and config implementation)

@@ -1,15 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
-  const Payment = sequelize.define("Payment", {
+  const Ticket = sequelize.define("Ticket", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     userId: DataTypes.UUID,
-    method: DataTypes.STRING,
-    amount: DataTypes.DECIMAL,
+    subject: DataTypes.STRING,
     status: DataTypes.STRING,
-    transactionId: DataTypes.STRING,
+    priority: DataTypes.STRING,
   });
-  return Payment;
+  return Ticket;
 };

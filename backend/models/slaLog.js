@@ -1,14 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
-  const Inventory = sequelize.define("Inventory", {
+  const SLALog = sequelize.define("SLALog", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     providerId: DataTypes.UUID,
-    name: DataTypes.STRING,
-    quantity: DataTypes.INTEGER,
-    threshold: DataTypes.INTEGER,
+    assignmentId: DataTypes.UUID,
+    status: DataTypes.STRING,
+    timestamp: DataTypes.DATE,
   });
-  return Inventory;
+  return SLALog;
 };

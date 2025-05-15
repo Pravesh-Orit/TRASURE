@@ -1,14 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
-  const Inventory = sequelize.define("Inventory", {
+  const AdminUser = sequelize.define("AdminUser", {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    providerId: DataTypes.UUID,
     name: DataTypes.STRING,
-    quantity: DataTypes.INTEGER,
-    threshold: DataTypes.INTEGER,
+    email: DataTypes.STRING,
+    role: DataTypes.STRING,
+    password: DataTypes.STRING,
   });
-  return Inventory;
+  return AdminUser;
 };

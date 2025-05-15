@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define("User", {
     id: {
@@ -16,6 +15,3 @@ module.exports = (sequelize, DataTypes) => {
   });
   return User;
 };
-=======
-// User model
->>>>>>> 4c8c205 (backend module structure and config implementation)

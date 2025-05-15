@@ -1,15 +1,5 @@
 const Sequelize = require("sequelize");
-const config = require("../config/config");
-const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
-  {
-    host: config.host,
-    dialect: "postgres",
-    logging: false,
-  }
-);
+const sequelize = require("../config/database");
 
 const db = {};
 
@@ -44,13 +34,13 @@ db.AnalyticsRecord = require("./analyticsRecord")(sequelize, Sequelize);
 db.Invoice = require("./invoice")(sequelize, Sequelize);
 
 // Define associations below
-db.User.hasMany(db.Vehicle);
-db.Vehicle.belongsTo(db.User);
-db.User.hasMany(db.ServiceRequest);
-db.ServiceRequest.belongsTo(db.User);
-db.ServiceRequest.hasOne(db.Appointment);
-db.Appointment.belongsTo(db.ServiceRequest);
-db.User.hasMany(db.Payment);
-db.Payment.belongsTo(db.User);
+db.User.hasMany(db.Vehicle, { foreignKey: "userId" });
+db.Vehicle.belongsTo(db.User, { foreignKey: "userId" });
+db.User.hasMany(db.ServiceRequest, { foreignKey: "userId" });
+db.ServiceRequest.belongsTo(db.User, { foreignKey: "userId" });
+db.ServiceRequest.hasOne(db.Appointment, { foreignKey: "serviceRequestId" });
+db.Appointment.belongsTo(db.ServiceRequest, { foreignKey: "serviceRequestId" });
+db.User.hasMany(db.Payment, { foreignKey: "userId" });
+db.Payment.belongsTo(db.User, { foreignKey: "userId" });
 
 module.exports = db;

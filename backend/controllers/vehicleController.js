@@ -1,28 +1,69 @@
 const { Vehicle } = require("../models");
 
-exports.addVehicle = async (req, res) => {
+exports.addVehicle = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.create({ ...req.body, userId: req.user.id });
-    res.status(201).json(vehicle);
+    const { make, model, year, registrationNumber } = req.body;
+
+    if (!make || !model || !year || !registrationNumber) {
+      return res.status(400).json({ error: "All vehicle fields are required" });
+    }
+
+    const vehicle = await Vehicle.create({
+      userId: req.user.id,
+      make,
+      model,
+      year,
+      registrationNumber,
+    });
+
+    res.status(201).json({ success: true, data: vehicle });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.getVehicles = async (req, res) => {
-  const vehicles = await Vehicle.findAll({ where: { userId: req.user.id } });
-  res.json(vehicles);
+exports.getVehicles = async (req, res, next) => {
+  try {
+    const vehicles = await Vehicle.findAll({
+      where: { userId: req.user.id },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({ success: true, data: vehicles });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.updateVehicle = async (req, res) => {
-  const { id } = req.params;
-  await Vehicle.update(req.body, { where: { id, userId: req.user.id } });
-  const updated = await Vehicle.findByPk(id);
-  res.json(updated);
+exports.updateVehicle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const vehicle = await Vehicle.findOne({
+      where: { id, userId: req.user.id },
+    });
+
+    if (!vehicle) return res.status(404).json({ error: "Vehicle not found" });
+
+    await vehicle.update(req.body);
+    res.status(200).json({ success: true, data: vehicle });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.deleteVehicle = async (req, res) => {
-  const { id } = req.params;
-  await Vehicle.destroy({ where: { id, userId: req.user.id } });
-  res.status(204).send();
+exports.deleteVehicle = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Vehicle.destroy({
+      where: { id, userId: req.user.id },
+    });
+
+    if (!deleted) return res.status(404).json({ error: "Vehicle not found" });
+
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
 };

@@ -1,22 +1,69 @@
 const { Inventory } = require("../models");
 
-exports.addItem = async (req, res) => {
-  const item = await Inventory.create(req.body);
-  res.status(201).json(item);
+exports.addItem = async (req, res, next) => {
+  try {
+    const { name, quantity, unitCost, partNumber } = req.body;
+
+    if (!name || quantity === undefined || !unitCost) {
+      return res
+        .status(400)
+        .json({ error: "Missing required inventory fields" });
+    }
+
+    const item = await Inventory.create({
+      providerId: req.user.id,
+      name,
+      quantity,
+      unitCost,
+      partNumber,
+    });
+
+    res.status(201).json({ success: true, data: item });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.getItems = async (req, res) => {
-  const items = await Inventory.findAll({ where: { providerId: req.user.id } });
-  res.json(items);
+exports.getItems = async (req, res, next) => {
+  try {
+    const items = await Inventory.findAll({
+      where: { providerId: req.user.id },
+      order: [["createdAt", "DESC"]],
+    });
+    res.status(200).json({ success: true, data: items });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.updateItem = async (req, res) => {
-  await Inventory.update(req.body, { where: { id: req.params.id } });
-  const updated = await Inventory.findByPk(req.params.id);
-  res.json(updated);
+exports.updateItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const item = await Inventory.findByPk(id);
+    if (!item)
+      return res.status(404).json({ error: "Inventory item not found" });
+
+    await item.update(updates);
+    res.status(200).json({ success: true, data: item });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.deleteItem = async (req, res) => {
-  await Inventory.destroy({ where: { id: req.params.id } });
-  res.status(204).send();
+exports.deleteItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Inventory.destroy({
+      where: { id, providerId: req.user.id },
+    });
+    if (!deleted)
+      return res.status(404).json({ error: "Inventory item not found" });
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 };

@@ -1,16 +1,28 @@
 const { User } = require("../models");
 
-exports.getProfile = async (req, res) => {
-  const user = await User.findByPk(req.user.id);
-  res.json(user);
+exports.getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.updateProfile = async (req, res) => {
+exports.updateProfile = async (req, res, next) => {
   try {
-    await User.update(req.body, { where: { id: req.user.id } });
-    const updated = await User.findByPk(req.user.id);
-    res.json(updated);
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    await user.update(req.body);
+
+    res.status(200).json({ success: true, data: user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };

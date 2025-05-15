@@ -11,7 +11,7 @@ function initializeSocket(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log("✅ New WebSocket client connected:", socket.id);
 
     socket.on("joinRoom", (roomId) => {
       socket.join(roomId);

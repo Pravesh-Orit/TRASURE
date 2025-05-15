@@ -37,3 +37,6 @@ coverage/
 
 # Other
 *.env.*
+
+# Firebase service account key
+backend/config/serviceAccountKey.json

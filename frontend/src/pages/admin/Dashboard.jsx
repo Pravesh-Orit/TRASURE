@@ -1,28 +1,37 @@
-// src/pages/admin/Dashboard.jsx - placeholder for implementation
-import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "../../components/ui/Card";
-import { fetchAdminDashboardStats } from "../../api/adminApi";
+import React from "react";
+import { Grid, Card, CardContent, Typography } from "@mui/material";
 
-const AdminDashboard = () => {
-  const [stats, setStats] = useState({});
+const stats = [
+  { label: "Total Revenue", value: "₹12.5L" },
+  { label: "Bookings Today", value: "134" },
+  { label: "Avg Response Time", value: "12 min" },
+  { label: "Pending Complaints", value: "8" },
+];
 
-  useEffect(() => {
-    fetchAdminDashboardStats().then((data) => setStats(data));
-  }, []);
-
+const Dashboard = () => {
   return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card title="Total Revenue">
-        <CardContent>₹{stats.revenue || 0}</CardContent>
-      </Card>
-      <Card title="Bookings">
-        <CardContent>{stats.bookings || 0}</CardContent>
-      </Card>
-      <Card title="SLA Compliance">
-        <CardContent>{stats.slaCompliance || 0}%</CardContent>
-      </Card>
-    </div>
+    <>
+      <Typography variant="h4" gutterBottom>
+        Admin Dashboard
+      </Typography>
+      <Grid container spacing={3}>
+        {stats.map((stat, i) => (
+          <Grid item xs={12} sm={6} md={3} key={i}>
+            <Card elevation={3}>
+              <CardContent>
+                <Typography variant="subtitle1" color="textSecondary">
+                  {stat.label}
+                </Typography>
+                <Typography variant="h5" fontWeight="bold">
+                  {stat.value}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </>
   );
 };
 
-export default AdminDashboard;
+export default Dashboard;

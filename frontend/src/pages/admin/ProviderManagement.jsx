@@ -1,52 +1,53 @@
-// src/pages/admin/ProviderManagement.jsx - placeholder for implementation
-import React, { useEffect, useState } from "react";
-import { getAllProviders, approveKYC } from "../../api/adminApi";
-import { Button } from "../../components/ui/Button";
+import React from "react";
+import {
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+} from "@mui/material";
 
-const ProviderManagement = () => {
-  const [providers, setProviders] = useState([]);
+const providers = [
+  { id: 1, name: "SpeedFix", tier: "Gold", kycStatus: "Pending" },
+  { id: 2, name: "QuickAuto", tier: "Silver", kycStatus: "Approved" },
+];
 
-  useEffect(() => {
-    getAllProviders().then(setProviders);
-  }, []);
-
-  const handleApprove = (id) => {
-    approveKYC(id).then(() =>
-      setProviders((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, kycStatus: "approved" } : p))
-      )
-    );
-  };
-
+export default function ProviderManagement() {
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Providers</h2>
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <th>Company</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {providers.map((p) => (
-            <tr key={p.id}>
-              <td>{p.name}</td>
-              <td>{p.kycStatus}</td>
-              <td>
-                {p.kycStatus !== "approved" && (
-                  <Button onClick={() => handleApprove(p.id)}>
-                    Approve KYC
+    <Paper sx={{ padding: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Service Providers
+      </Typography>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Tier</TableCell>
+              <TableCell>KYC Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {providers.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell>{p.name}</TableCell>
+                <TableCell>{p.tier}</TableCell>
+                <TableCell>{p.kycStatus}</TableCell>
+                <TableCell>
+                  <Button variant="outlined" size="small">
+                    Review
                   </Button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
-};
-
-export default ProviderManagement;
+}

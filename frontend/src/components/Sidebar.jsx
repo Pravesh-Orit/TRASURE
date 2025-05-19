@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx - placeholder for implementation
 import React from "react";
 import {
   Drawer,

@@ -1,52 +1,68 @@
-// src/pages/admin/UserManagement.jsx - placeholder for implementation
-import React, { useEffect, useState } from "react";
-import { getAllUsers, toggleUserStatus } from "../../api/adminApi";
-import { Button } from "../../components/ui/Button";
+import React from "react";
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Typography,
+  Paper,
+  IconButton,
+} from "@mui/material";
+import { Delete, Edit } from "@mui/icons-material";
 
-const UserManagement = () => {
-  const [users, setUsers] = useState([]);
+const users = [
+  {
+    id: 1,
+    name: "John",
+    email: "john@example.com",
+    role: "customer",
+    status: "active",
+  },
+  {
+    id: 2,
+    name: "Ravi",
+    email: "ravi@trasure.com",
+    role: "provider",
+    status: "inactive",
+  },
+];
 
-  useEffect(() => {
-    getAllUsers().then(setUsers);
-  }, []);
-
-  const handleToggle = (userId) => {
-    toggleUserStatus(userId).then(() =>
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, active: !u.active } : u))
-      )
-    );
-  };
-
+export default function UserManagement() {
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Users</h2>
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>{user.active ? "Active" : "Inactive"}</td>
-              <td>
-                <Button onClick={() => handleToggle(user.id)}>
-                  {user.active ? "Deactivate" : "Activate"}
-                </Button>
-              </td>
-            </tr>
+    <Paper sx={{ padding: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Manage Users
+      </Typography>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Email</TableCell>
+            <TableCell>Role</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell align="right">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {users.map((u) => (
+            <TableRow key={u.id}>
+              <TableCell>{u.name}</TableCell>
+              <TableCell>{u.email}</TableCell>
+              <TableCell>{u.role}</TableCell>
+              <TableCell>{u.status}</TableCell>
+              <TableCell align="right">
+                <IconButton>
+                  <Edit />
+                </IconButton>
+                <IconButton>
+                  <Delete />
+                </IconButton>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Paper>
   );
-};
-
-export default UserManagement;
+}

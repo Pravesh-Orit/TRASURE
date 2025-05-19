@@ -1,4 +1,3 @@
-// src/pages/admin/RBACManager.jsx - placeholder for implementation
 import React, { useState } from "react";
 import {
   Card,

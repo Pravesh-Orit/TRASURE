@@ -19,8 +19,8 @@ import ProviderManagement from "./pages/admin/ProviderManagement";
 import RBACManager from "./pages/admin/RBACManager";
 import AuditLogs from "./pages/admin/AuditLogs";
 import SubscriptionManager from "./pages/admin/SubscriptionManager";
-// import DynamicPricingEngine from "./pages/admin/DynamicPricingEngine";
-// import TicketsSystem from "./pages/admin/TicketsSystem";
+import DynamicPricingEngine from "./pages/admin/DynamicPricingEngine";
+import TicketsSystem from "./pages/admin/TicketsSystem";
 // import ReconciliationDashboard from "./pages/admin/ReconciliationDashboard";
 // import BNPLApproval from "./pages/admin/BNPLApproval";
 // import ReminderViewer from "./pages/admin/ReminderViewer";
@@ -53,9 +53,9 @@ export default function App() {
               path="/admin/subscriptions"
               element={<SubscriptionManager />}
             />
-            {/*
             <Route path="/admin/pricing" element={<DynamicPricingEngine />} />
             <Route path="/admin/tickets" element={<TicketsSystem />} />
+            {/*
             <Route
               path="/admin/reconciliation"
               element={<ReconciliationDashboard />}

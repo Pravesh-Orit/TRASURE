@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTheme } from "@mui/material/styles";
+import { useNavigate, useLocation } from "react-router-dom";
 import Login from "../../components/auth/Login";
-import Register from "../../components/auth/Register";
+import Register from "../../components/auth/Register.jsx";
 import {
-  HiOutlineArrowRight,
-  HiOutlineArrowLeft,
   HiOutlineShieldCheck,
   HiOutlineLightningBolt,
   HiOutlineChatAlt2,
@@ -40,9 +39,23 @@ const features = [
   },
 ];
 
-export default function AuthPage() {
-  const [mode, setMode] = useState("login");
+export default function AuthPage({ mode }) {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine mode from prop or path
+  const currentMode =
+    mode || (location.pathname === "/register" ? "register" : "login");
+
+  // Switch handler navigates to the other route
+  const handleSwitch = () => {
+    if (currentMode === "login") {
+      navigate("/register");
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <div
@@ -151,10 +164,10 @@ export default function AuthPage() {
             overflow: "visible",
           }}
         >
-          {mode === "login" ? (
-            <Login onSwitch={() => setMode("register")} />
+          {currentMode === "login" ? (
+            <Login onSwitch={handleSwitch} />
           ) : (
-            <Register onSwitch={() => setMode("login")} />
+            <Register onSwitch={handleSwitch} />
           )}
         </section>
       </main>

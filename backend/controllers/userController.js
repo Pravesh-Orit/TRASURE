@@ -26,3 +26,18 @@ exports.updateProfile = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.markOnboardingComplete = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.onboardingComplete = true;
+    await user.save();
+    res.json({ success: true, message: "Onboarding completed", user });
+  } catch (error) {
+    console.error("Mark onboarding error:", error);
+    res.status(500).json({ error: error.message || "Server Error" });
+  }
+};

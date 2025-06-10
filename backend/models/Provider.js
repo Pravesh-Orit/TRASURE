@@ -5,16 +5,28 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    businessName: DataTypes.STRING,
-    contactPerson: DataTypes.STRING,
-    email: DataTypes.STRING,
-    phone: DataTypes.STRING,
-    gstNumber: DataTypes.STRING,
-    panNumber: DataTypes.STRING,
-    address: DataTypes.TEXT,
-    kycStatus: DataTypes.STRING,
-    serviceArea: DataTypes.ARRAY(DataTypes.STRING),
+    userId: DataTypes.UUID,
+    companyName: DataTypes.STRING,
+    kycStatus: {
+      type: DataTypes.ENUM("pending", "verified", "rejected"),
+      defaultValue: "pending",
+    },
     tier: DataTypes.STRING,
+    serviceArea: DataTypes.ARRAY(DataTypes.STRING),
+    location: DataTypes.JSONB,
+    availability: DataTypes.JSONB,
+    workingHours: DataTypes.JSONB,
+    garageImages: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue: [],
+    },
   });
+
+  Provider.associate = (models) => {
+    Provider.belongsTo(models.User, { foreignKey: "userId" });
+    Provider.hasMany(models.Mechanic, { foreignKey: "providerId" });
+    Provider.hasMany(models.ServiceRequest, { foreignKey: "providerId" });
+  };
+
   return Provider;
 };

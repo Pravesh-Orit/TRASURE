@@ -40,3 +40,6 @@ coverage/
 
 # Firebase service account key
 backend/config/serviceAccountKey.json
+
+# Ignore any local configuration files
+/uploads/

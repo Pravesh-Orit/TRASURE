@@ -3,8 +3,8 @@ const router = express.Router();
 const controller = require("../controllers/providerController");
 const authenticate = require("../middleware/authenticate");
 
-router.post("/", authenticate, controller.registerProvider);
+router.post("/onboarding", authenticate, controller.onboarding);
+router.get("/status", authenticate, controller.status);
 router.get("/:id", authenticate, controller.getProviderById);
 router.put("/:id", authenticate, controller.updateProvider);
-
 module.exports = router;

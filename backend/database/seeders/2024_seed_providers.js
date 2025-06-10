@@ -1,18 +1,18 @@
+"use strict";
+const { v4: uuidv4 } = require("uuid");
 module.exports = {
   up: async (queryInterface) => {
     await queryInterface.bulkInsert("Providers", [
       {
-        id: "33333333-3333-3333-3333-333333333333",
-        businessName: "FastFix Garage",
-        contactPerson: "Amit Sharma",
-        email: "fastfix@example.com",
-        phone: "9876543210",
-        gstNumber: "07ABCDE1234F1Z5",
-        panNumber: "ABCDE1234F",
-        address: "Industrial Area, New Delhi",
-        kycStatus: "approved",
-        serviceArea: ["Delhi", "Noida"],
-        tier: "Gold",
+        id: uuidv4(),
+        userId: uuidv4(),
+        companyName: "Test Garage",
+        kycStatus: "pending",
+        tier: "basic",
+        serviceArea: JSON.stringify(["Delhi", "Noida"]),
+        location: JSON.stringify({ lat: 28.6, lng: 77.2 }),
+        availability: JSON.stringify({ days: ["Mon", "Tue"] }),
+        workingHours: JSON.stringify({ start: "09:00", end: "18:00" }),
         createdAt: new Date(),
         updatedAt: new Date(),
       },

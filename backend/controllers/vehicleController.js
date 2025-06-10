@@ -2,9 +2,9 @@ const { Vehicle } = require("../models");
 
 exports.addVehicle = async (req, res, next) => {
   try {
-    const { make, model, year, registrationNumber } = req.body;
+    const { make, model, year, registrationNumber, fuelType } = req.body;
 
-    if (!make || !model || !year || !registrationNumber) {
+    if (!make || !model || !year || !registrationNumber || !fuelType) {
       return res.status(400).json({ error: "All vehicle fields are required" });
     }
 
@@ -14,8 +14,8 @@ exports.addVehicle = async (req, res, next) => {
       model,
       year,
       registrationNumber,
+      fuelType,
     });
-
     res.status(201).json({ success: true, data: vehicle });
   } catch (err) {
     next(err);

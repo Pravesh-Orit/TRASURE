@@ -6,16 +6,33 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
       },
-      userId: Sequelize.UUID,
-      make: Sequelize.STRING,
-      model: Sequelize.STRING,
-      year: Sequelize.INTEGER,
-      registrationNumber: Sequelize.STRING,
-      corporateAccount: Sequelize.BOOLEAN,
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      userId: {
+        type: Sequelize.UUID,
+      },
+      make: {
+        type: Sequelize.STRING,
+      },
+      model: {
+        type: Sequelize.STRING,
+      },
+      year: {
+        type: Sequelize.INTEGER,
+      },
+      registrationNumber: {
+        type: Sequelize.STRING,
+      },
+      fuelType: {
+        type: Sequelize.STRING, // ✅ now it's correct
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+      },
     });
   },
+
   down: async (queryInterface) => {
     await queryInterface.dropTable("Vehicles");
   },

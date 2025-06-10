@@ -34,14 +34,15 @@ exports.getAssignments = async (req, res, next) => {
 
 exports.updateAssignmentStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
     const { id } = req.params;
-
-    const updated = await Assignment.update({ status }, { where: { id } });
-    if (!updated[0])
+    const { status } = req.body;
+    const assignment = await Assignment.findByPk(id);
+    if (!assignment || assignment.mechanicId !== req.user.id)
       return res.status(404).json({ error: "Assignment not found" });
 
-    res.status(200).json({ success: true, message: "Status updated" });
+    assignment.status = status;
+    await assignment.save();
+    res.json({ success: true, data: assignment });
   } catch (err) {
     next(err);
   }

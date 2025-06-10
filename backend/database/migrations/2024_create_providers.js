@@ -1,23 +1,42 @@
+"use strict";
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface, DataTypes) => {
     await queryInterface.createTable("Providers", {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+        allowNull: false,
       },
-      businessName: Sequelize.STRING,
-      contactPerson: Sequelize.STRING,
-      email: Sequelize.STRING,
-      phone: Sequelize.STRING,
-      gstNumber: Sequelize.STRING,
-      panNumber: Sequelize.STRING,
-      address: Sequelize.TEXT,
-      kycStatus: Sequelize.STRING,
-      serviceArea: Sequelize.ARRAY(Sequelize.STRING),
-      tier: Sequelize.STRING,
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      companyName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      kycStatus: {
+        type: DataTypes.ENUM("pending", "verified", "rejected"),
+        defaultValue: "pending",
+      },
+      tier: DataTypes.STRING,
+      serviceArea: DataTypes.ARRAY(DataTypes.STRING),
+      location: DataTypes.JSONB,
+      availability: DataTypes.JSONB,
+      workingHours: DataTypes.JSONB,
+      garageImages: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
     });
   },
   down: async (queryInterface) => {

@@ -10,7 +10,12 @@ module.exports = (sequelize, DataTypes) => {
     model: DataTypes.STRING,
     year: DataTypes.INTEGER,
     registrationNumber: DataTypes.STRING,
-    corporateAccount: { type: DataTypes.BOOLEAN, defaultValue: false },
+    fuelType: DataTypes.STRING,
   });
+
+  Vehicle.associate = (models) => {
+    Vehicle.belongsTo(models.User, { foreignKey: "userId" });
+  };
+
   return Vehicle;
 };

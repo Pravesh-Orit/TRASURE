@@ -1,18 +1,41 @@
+"use strict";
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = {
-  up: async (queryInterface) => {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.bulkInsert("TierPlans", [
       {
-        id: "66666666-6666-6666-6666-666666666666",
+        id: uuidv4(),
         name: "Basic",
-        responseTime: 60,
-        coverageArea: "local",
-        discountRate: 5,
+        price: 0,
+        durationDays: 30,
+        features: JSON.stringify(["Standard Support", "Basic Listing"]),
+        responseTime: 48,
+        coverageArea: "City",
+        discountRate: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: uuidv4(),
+        name: "Premium",
+        price: 499,
+        durationDays: 30,
+        features: JSON.stringify([
+          "Priority Support",
+          "Featured Listing",
+          "Analytics",
+        ]),
+        responseTime: 12,
+        coverageArea: "State",
+        discountRate: 10,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     ]);
   },
-  down: async (queryInterface) => {
+
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.bulkDelete("TierPlans", null, {});
   },
 };

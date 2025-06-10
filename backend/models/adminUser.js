@@ -5,10 +5,13 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    name: DataTypes.STRING,
-    email: DataTypes.STRING,
-    role: DataTypes.STRING,
-    password: DataTypes.STRING,
+    userId: DataTypes.UUID,
+    adminLevel: DataTypes.STRING,
   });
+
+  AdminUser.associate = (models) => {
+    AdminUser.belongsTo(models.User, { foreignKey: "userId" });
+  };
+
   return AdminUser;
 };

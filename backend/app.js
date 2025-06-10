@@ -4,7 +4,15 @@ const cors = require("cors");
 const morgan = require("morgan");
 const errorHandler = require("./middleware/errorHandler");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"], // Add OPTIONS!
+    optionsSuccessStatus: 200,
+  })
+);
+
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -12,7 +20,7 @@ app.use(morgan("dev"));
 const routeModules = [
   "authRoutes",
   "userRoutes",
-  "vehicleRoutes",
+  "vehiclesRoutes",
   "bnplRoutes",
   "fleetRoutes",
   "serviceRoutes",
@@ -38,12 +46,29 @@ const routeModules = [
   "analyticsRoutes",
   "reconciliationRoutes",
 ];
-
+const documentRoutes = require("./routes/documentRoutes");
+app.use("/api/documents", documentRoutes);
 routeModules.forEach((route) => {
-  app.use(
-    `/api/${route.replace("Routes", "").toLowerCase()}`,
-    require(`./routes/${route}`)
-  );
+  if (
+    !route ||
+    typeof route !== "string" ||
+    !route.endsWith("Routes") ||
+    route.replace("Routes", "").trim() === ""
+  ) {
+    console.warn("Skipping invalid route module:", route);
+    return;
+  }
+
+  const routePath = `/api/${route.replace("Routes", "").toLowerCase()}`;
+
+  console.log("Mounting route:", routePath);
+
+  try {
+    const routeHandler = require(`./routes/${route}`);
+    app.use(routePath, routeHandler);
+  } catch (err) {
+    console.error(`❌ Failed to load route ${route}:`, err.message);
+  }
 });
 
 app.use(errorHandler);

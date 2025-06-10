@@ -1,41 +1,56 @@
-const { AdminUser } = require("../models");
-const bcrypt = require("bcrypt");
-const { validationResult } = require("express-validator");
+const { User, Provider, Mechanic } = require("../models");
 
-exports.getAllAdmins = async (req, res, next) => {
+// List all users (customers, providers, mechanics)
+exports.getAllUsers = async (req, res, next) => {
   try {
-    const admins = await AdminUser.findAll({
+    const users = await User.findAll({
       attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
     });
-    res.status(200).json({ success: true, data: admins });
+    res.json({ success: true, data: users });
   } catch (err) {
     next(err);
   }
 };
 
-exports.createAdmin = async (req, res, next) => {
+// List all mechanics and their providers
+exports.getAllMechanics = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
-
-    const { name, email, password, role } = req.body;
-
-    const existing = await AdminUser.findOne({ where: { email } });
-    if (existing)
-      return res.status(409).json({ error: "Email already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = await AdminUser.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
+    const mechanics = await Mechanic.findAll({
+      include: [{ model: Provider, attributes: ["id", "companyName"] }],
     });
+    res.json({ success: true, data: mechanics });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    res
-      .status(201)
-      .json({ success: true, data: { id: admin.id, name, email, role } });
+// Approve or reject provider KYC
+exports.approveProvider = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // "approved" or "rejected"
+    const provider = await Provider.findByPk(id);
+    if (!provider) return res.status(404).json({ error: "Provider not found" });
+
+    provider.status = status;
+    provider.kycStatus = status === "approved" ? "verified" : "rejected";
+    await provider.save();
+
+    res.json({ success: true, data: provider });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// List all providers + KYC status
+exports.getAllProviders = async (req, res, next) => {
+  try {
+    const providers = await Provider.findAll({
+      include: [{ model: User, attributes: ["name", "email", "phone"] }],
+      order: [["createdAt", "DESC"]],
+    });
+    res.json({ success: true, data: providers });
   } catch (err) {
     next(err);
   }

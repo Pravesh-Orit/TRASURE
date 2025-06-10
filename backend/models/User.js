@@ -9,9 +9,41 @@ module.exports = (sequelize, DataTypes) => {
     email: { type: DataTypes.STRING, unique: true },
     phone: { type: DataTypes.STRING, unique: true },
     password: DataTypes.STRING,
-    role: DataTypes.STRING,
-    creditLimit: DataTypes.DECIMAL,
-    bnplEnabled: DataTypes.BOOLEAN,
+    role: {
+      type: DataTypes.ENUM("customer", "provider", "mechanic", "admin"),
+      allowNull: false,
+      defaultValue: "customer",
+    },
+    isOtpVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    otpVerifiedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    isPhoneVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    status: {
+      type: DataTypes.ENUM("pending", "active", "rejected"),
+      defaultValue: "pending",
+    },
+    onboardingComplete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   });
+
+  User.associate = (models) => {
+    User.hasOne(models.Provider, { foreignKey: "userId" });
+    User.hasOne(models.Mechanic, { foreignKey: "userId" });
+    User.hasMany(models.Vehicle, { foreignKey: "userId" });
+    User.hasMany(models.ServiceRequest, { foreignKey: "userId" });
+    User.hasMany(models.BNPLRequest, { foreignKey: "userId" });
+    User.hasOne(models.AdminUser, { foreignKey: "userId" });
+  };
+
   return User;
 };

@@ -33,6 +33,7 @@ db.CrossSellAd = require("./crossSellAd")(sequelize, Sequelize);
 db.AnalyticsRecord = require("./analyticsRecord")(sequelize, Sequelize);
 db.Invoice = require("./invoice")(sequelize, Sequelize);
 db.Document = require("./Document")(sequelize, Sequelize);
+db.ServiceCategory = require("./serviceCategory")(sequelize, Sequelize);
 
 // User associations
 db.User.hasOne(db.Provider, { foreignKey: "userId" });

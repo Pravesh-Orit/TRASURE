@@ -8,7 +8,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"], // Add OPTIONS!
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     optionsSuccessStatus: 200,
   })
 );
@@ -16,7 +16,7 @@ app.use(
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Load all route files
+// All API route modules
 const routeModules = [
   "authRoutes",
   "userRoutes",
@@ -42,33 +42,33 @@ const routeModules = [
   "subscriptionRoutes",
   "invoiceRoutes",
   "disputeRoutes",
-  "promotionRoutes",
+  "adminPromotionRoutes",
   "analyticsRoutes",
   "reconciliationRoutes",
+  "documentRoutes", // ⬅️ Moved here
+  "adminServiceCategoriesRoutes", // ✅ Newly added
 ];
-const documentRoutes = require("./routes/documentRoutes");
-app.use("/api/documents", documentRoutes);
+
 routeModules.forEach((route) => {
-  if (
-    !route ||
-    typeof route !== "string" ||
-    !route.endsWith("Routes") ||
-    route.replace("Routes", "").trim() === ""
-  ) {
-    console.warn("Skipping invalid route module:", route);
-    return;
+  const routeHandler = require(`./routes/${route}`);
+
+  // NEW MOUNTING LOGIC
+  let baseRoute = route.replace("Routes", "");
+
+  // If route starts with admin, mount under /api/admin/
+  if (baseRoute.toLowerCase().startsWith("admin")) {
+    baseRoute = `/api/admin/${baseRoute
+      .replace(/^admin/i, "")
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .toLowerCase()}`;
+  } else {
+    baseRoute = `/api/${baseRoute
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .toLowerCase()}`;
   }
 
-  const routePath = `/api/${route.replace("Routes", "").toLowerCase()}`;
-
-  console.log("Mounting route:", routePath);
-
-  try {
-    const routeHandler = require(`./routes/${route}`);
-    app.use(routePath, routeHandler);
-  } catch (err) {
-    console.error(`❌ Failed to load route ${route}:`, err.message);
-  }
+  console.log("✅ Mounting route:", baseRoute);
+  app.use(baseRoute, routeHandler);
 });
 
 app.use(errorHandler);

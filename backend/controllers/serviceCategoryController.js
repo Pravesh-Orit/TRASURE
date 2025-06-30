@@ -1,4 +1,4 @@
-const { ServiceCategory } = require("../models");
+const { ServiceCategory, Skill } = require("../models");
 const { Op } = require("sequelize");
 
 exports.createCategory = async (req, res) => {
@@ -11,6 +11,7 @@ exports.createCategory = async (req, res) => {
       pinned,
       isActive,
       notes,
+      skillIds, // array of skill UUIDs
     } = req.body;
 
     if (!name || !description) {
@@ -29,7 +30,17 @@ exports.createCategory = async (req, res) => {
       notes: notes || "",
     });
 
-    return res.status(201).json({ success: true, data: category });
+    // 🆕 Assign skills if skillIds array is given
+    if (Array.isArray(skillIds) && skillIds.length > 0) {
+      await category.setSkills(skillIds);
+    }
+
+    // Return with skills included
+    const withSkills = await ServiceCategory.findByPk(category.id, {
+      include: [{ model: Skill, as: "skills" }],
+    });
+
+    return res.status(201).json({ success: true, data: withSkills });
   } catch (err) {
     console.error("Create Category Error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -67,6 +78,7 @@ exports.getAllCategories = async (req, res) => {
       limit: Number(limit),
       offset,
       paranoid: false,
+      include: [{ model: Skill, as: "skills" }], // 🆕 Always include skills
     });
 
     return res.json({
@@ -96,6 +108,7 @@ exports.updateCategory = async (req, res) => {
       status,
       pinned,
       notes,
+      skillIds, // array of skill UUIDs
     } = req.body;
 
     const category = await ServiceCategory.findByPk(id);
@@ -116,7 +129,16 @@ exports.updateCategory = async (req, res) => {
 
     await category.save();
 
-    return res.status(200).json({ success: true, data: category });
+    // 🆕 Update skills if skillIds array is given
+    if (Array.isArray(skillIds)) {
+      await category.setSkills(skillIds);
+    }
+
+    const withSkills = await ServiceCategory.findByPk(category.id, {
+      include: [{ model: Skill, as: "skills" }],
+    });
+
+    return res.status(200).json({ success: true, data: withSkills });
   } catch (err) {
     console.error("Update Category Error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -152,7 +174,13 @@ exports.restoreCategory = async (req, res) => {
     if (!category) return res.status(404).json({ error: "Not found" });
 
     await category.restore();
-    res.json({ success: true, data: category });
+
+    // 🆕 Return with skills
+    const withSkills = await ServiceCategory.findByPk(category.id, {
+      include: [{ model: Skill, as: "skills" }],
+    });
+
+    res.json({ success: true, data: withSkills });
   } catch (err) {
     console.error("Restore Category Error:", err);
     return res.status(500).json({ error: "Internal server error" });

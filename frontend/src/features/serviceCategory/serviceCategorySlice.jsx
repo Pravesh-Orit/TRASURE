@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+  fetchAdminServiceCategories,
   fetchServiceCategories,
   createServiceCategory,
   updateServiceCategory,
@@ -54,9 +55,25 @@ const serviceCategorySlice = createSlice({
     setSortDir(state, action) {
       state.sortDir = action.payload;
     },
+    setProviderTableParams: (state, action) => {
+      state.params = { ...state.params, ...action.payload };
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAdminServiceCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAdminServiceCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.categories = action.payload.data || [];
+        state.meta = action.payload.meta || { total: 0, page: 1, pages: 1 };
+      })
+      .addCase(fetchAdminServiceCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(fetchServiceCategories.pending, (state) => {
         state.loading = true;
         state.error = null;

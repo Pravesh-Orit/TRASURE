@@ -5,6 +5,8 @@ import CustomerOnboarding from "./customer/CustomerVehicleOnboarding";
 import ProviderOnboarding from "./provider/ProviderGarageOnboarding";
 import { Box, Container, Paper, Typography, Skeleton } from "@mui/material";
 import { motion } from "framer-motion";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // 💡 Subtle, luxurious gradient — no distractions
 const backgroundGradient = `linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)`;
@@ -16,12 +18,25 @@ const Onboarding = () => {
   useEffect(() => {
     if (!loading && user?.onboardingComplete) {
       if (user.role === "provider") {
-        navigate("/provider/dashboard", { replace: true });
+        if (user.provider?.kycStatus === "verified") {
+          navigate("/provider/dashboard", { replace: true });
+        } else if (user.provider?.kycStatus === "pending") {
+          navigate("/provider/pending", { replace: true });
+        }
       } else if (user.role === "customer") {
         navigate("/customer/home", { replace: true });
       } else if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       }
+    }
+
+    // 🔁 NEW: Notify rejected provider to re-submit
+    if (user?.role === "provider" && user?.provider?.kycStatus === "rejected") {
+      setTimeout(() => {
+        toast.warning(
+          "Your previous onboarding was rejected. Please re-submit the correct details."
+        );
+      }, 1000); // Prevent race with MUI mount
     }
   }, [loading, user, navigate]);
 
@@ -131,6 +146,7 @@ const Onboarding = () => {
           </Paper>
         </motion.div>
       </Container>
+      <ToastContainer position="top-right" autoClose={5000} />
     </Box>
   );
 };

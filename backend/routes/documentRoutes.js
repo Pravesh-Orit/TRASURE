@@ -30,4 +30,7 @@ router.patch(
   controller.updateStatus
 );
 
+// routes/documentRoutes.js
+router.delete("/:id", controller.deleteDocument);
+
 module.exports = router;

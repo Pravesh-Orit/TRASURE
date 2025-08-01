@@ -14,20 +14,54 @@ module.exports = {
       },
       companyName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       kycStatus: {
         type: DataTypes.ENUM("pending", "verified", "rejected"),
         defaultValue: "pending",
       },
+      rejectionReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       tier: DataTypes.STRING,
       serviceArea: DataTypes.ARRAY(DataTypes.STRING),
       location: DataTypes.JSONB,
+      serviceCategories: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+        defaultValue: [],
+      },
       availability: DataTypes.JSONB,
       workingHours: DataTypes.JSONB,
       garageImages: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],
+      },
+      // ✅ New bank detail fields
+      accountHolderName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      accountNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      ifscCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      bankName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      branchName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      upiId: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -39,6 +73,7 @@ module.exports = {
       },
     });
   },
+
   down: async (queryInterface) => {
     await queryInterface.dropTable("Providers");
   },

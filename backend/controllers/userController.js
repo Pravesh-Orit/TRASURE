@@ -35,6 +35,15 @@ exports.markOnboardingComplete = async (req, res) => {
     }
     user.onboardingComplete = true;
     await user.save();
+
+    // 🟢 Update provider KYC status if present
+    const provider = await user.getProvider(); // assumes User.hasOne(Provider)
+    if (provider && provider.kycStatus !== "verified") {
+      provider.kycStatus = "pending"; // or "under_review"
+      provider.rejectionReason = null; // clear any old reason
+      await provider.save();
+    }
+
     res.json({ success: true, message: "Onboarding completed", user });
   } catch (error) {
     console.error("Mark onboarding error:", error);

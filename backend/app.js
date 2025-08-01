@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 const morgan = require("morgan");
 const errorHandler = require("./middleware/errorHandler");
-
+const path = require("path");
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -13,6 +13,7 @@ app.use(
   })
 );
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -29,8 +30,11 @@ const routeModules = [
   "notificationRoutes",
   "chatRoutes",
   "trackingRoutes",
+  "ServiceCategoriesRoutes",
+  "provider/mechanics",
   "providerRoutes",
-  "mechanicRoutes",
+  "promotionRoutes",
+  // "mechanicRoutes",
   "inventoryRoutes",
   "assignmentRoutes",
   "slaRoutes",
@@ -46,7 +50,8 @@ const routeModules = [
   "analyticsRoutes",
   "reconciliationRoutes",
   "documentRoutes", // ⬅️ Moved here
-  "adminServiceCategoriesRoutes", // ✅ Newly added
+  "adminServiceCategoriesRoutes",
+  "skillsRoutes", // ✅ Newly added
 ];
 
 routeModules.forEach((route) => {

@@ -34,8 +34,10 @@ db.AnalyticsRecord = require("./analyticsRecord")(sequelize, Sequelize);
 db.Invoice = require("./invoice")(sequelize, Sequelize);
 db.Document = require("./Document")(sequelize, Sequelize);
 db.ServiceCategory = require("./serviceCategory")(sequelize, Sequelize);
+// New global skills registry
+db.Skill = require("./Skill")(sequelize, Sequelize);
 
-// User associations
+// ===== User associations (no change) =====
 db.User.hasOne(db.Provider, { foreignKey: "userId" });
 db.Provider.belongsTo(db.User, { foreignKey: "userId" });
 
@@ -57,14 +59,13 @@ db.BNPLRequest.belongsTo(db.User, { foreignKey: "userId" });
 db.User.hasMany(db.Payment, { foreignKey: "userId" });
 db.Payment.belongsTo(db.User, { foreignKey: "userId" });
 
-// Provider associations
+// ===== Provider associations (no change) =====
 db.Provider.hasMany(db.Mechanic, { foreignKey: "providerId" });
 db.Mechanic.belongsTo(db.Provider, { foreignKey: "providerId" });
 
 db.Provider.hasMany(db.ServiceRequest, { foreignKey: "providerId" });
 db.ServiceRequest.belongsTo(db.Provider, { foreignKey: "providerId" });
 
-// ServiceRequest and Appointment
 db.ServiceRequest.hasOne(db.Appointment, { foreignKey: "serviceRequestId" });
 db.Appointment.belongsTo(db.ServiceRequest, { foreignKey: "serviceRequestId" });
 
@@ -73,5 +74,21 @@ db.Document.belongsTo(db.User, { foreignKey: "userId" });
 
 db.Provider.hasMany(db.Document, { foreignKey: "providerId" });
 db.Document.belongsTo(db.Provider, { foreignKey: "providerId" });
+
+// ====== NEW: ServiceCategory <-> Skill (Many-to-Many) ======
+db.ServiceCategory.belongsToMany(db.Skill, {
+  through: "ServiceCategorySkill",
+  foreignKey: "serviceCategoryId",
+  otherKey: "skillId",
+  as: "skills",
+});
+db.Skill.belongsToMany(db.ServiceCategory, {
+  through: "ServiceCategorySkill",
+  foreignKey: "skillId",
+  otherKey: "serviceCategoryId",
+  as: "categories",
+});
+
+// (Mechanic <-> Skill will be added later, not needed now)
 
 module.exports = db;

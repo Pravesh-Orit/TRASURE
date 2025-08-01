@@ -1,9 +1,9 @@
+// routes/promotionRoutes.js
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/promotionController");
-const authenticate = require("../middleware/authenticate");
+const promotionController = require("../controllers/promotionController");
 
-router.get("/", authenticate, controller.getPromotions);
-router.post("/", authenticate, controller.createPromotion);
+// Public endpoint (no middleware needed)
+router.get("/active", promotionController.getActivePromotions);
 
 module.exports = router;

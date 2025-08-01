@@ -1,5 +1,5 @@
 const documentService = require("../services/documentService");
-const { Provider } = require("../models");
+const { Provider, Document } = require("../models");
 
 // Upload single or multiple documents
 exports.upload = async (req, res, next) => {
@@ -123,4 +123,23 @@ exports.updateStatus = async (req, res, next) => {
     console.error("Update document status error:", error);
     next(error);
   }
+};
+
+// controllers/documentController.js
+exports.deleteDocument = async (req, res) => {
+  const { id } = req.params;
+  console.log("Delete called for Document ID:", id);
+  // force log all found ids!
+  const allDocs = await Document.findAll();
+  console.log(
+    "All docs ids in DB:",
+    allDocs.map((d) => d.id)
+  );
+  const doc = await Document.findByPk(id);
+  if (!doc) {
+    console.log("Not found:", id);
+    return res.status(404).json({ error: "Document not found" });
+  }
+  await doc.destroy();
+  res.json({ success: true });
 };

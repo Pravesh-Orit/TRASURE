@@ -1,6 +1,7 @@
-const { User, Provider, Mechanic } = require("../models");
+const { User, Provider, Mechanic, Document, Sequelize } = require("../models");
+const { Op } = Sequelize;
 
-// List all users (customers, providers, mechanics)
+// --- 1. GET ALL USERS (for admin dashboard) ---
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.findAll({
@@ -13,7 +14,7 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// List all mechanics and their providers
+// --- 2. GET ALL MECHANICS (with providers) ---
 exports.getAllMechanics = async (req, res, next) => {
   try {
     const mechanics = await Mechanic.findAll({
@@ -25,33 +26,198 @@ exports.getAllMechanics = async (req, res, next) => {
   }
 };
 
-// Approve or reject provider KYC
-exports.approveProvider = async (req, res, next) => {
+// --- 3. GET ALL PROVIDERS (ADMIN TABLE: pagination, search, sort) ---
+exports.getAllProviders = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body; // "approved" or "rejected"
-    const provider = await Provider.findByPk(id);
-    if (!provider) return res.status(404).json({ error: "Provider not found" });
+    const {
+      search = "",
+      sortBy = "createdAt",
+      order = "desc",
+      page = 1,
+      pageSize = 10,
+    } = req.query;
 
-    provider.status = status;
-    provider.kycStatus = status === "approved" ? "verified" : "rejected";
-    await provider.save();
+    let userInclude = [];
+    let realSearchFilter = {};
 
-    res.json({ success: true, data: provider });
+    if (search && search.trim()) {
+      userInclude = [
+        {
+          model: User,
+          attributes: [],
+          required: true,
+        },
+      ];
+      realSearchFilter = {
+        [Op.or]: [
+          { companyName: { [Op.iLike]: `%${search}%` } },
+          { "$User.name$": { [Op.iLike]: `%${search}%` } },
+          { "$User.phone$": { [Op.iLike]: `%${search}%` } },
+        ],
+      };
+    }
+
+    let orderArr = [];
+    if (sortBy === "requested" || sortBy === "createdAt") {
+      orderArr = [
+        ["createdAt", order.toLowerCase() === "asc" ? "ASC" : "DESC"],
+      ];
+    } else if (["companyName", "tier", "kycStatus"].includes(sortBy)) {
+      orderArr = [[sortBy, order.toLowerCase() === "asc" ? "ASC" : "DESC"]];
+    }
+
+    // COUNT
+    const total = await Provider.count({
+      where: realSearchFilter,
+      include: userInclude,
+    });
+
+    // PROVIDERS (for table)
+    const providers = await Provider.findAll({
+      where: realSearchFilter,
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name", "email", "phone", "onboardingComplete"],
+          required: !!(search && search.trim()), // Only force join if searching
+        },
+        {
+          model: Document,
+          attributes: [
+            "id",
+            "type",
+            "filePath",
+            "status",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+      ],
+      order: orderArr,
+      offset: (parseInt(page) - 1) * parseInt(pageSize),
+      limit: parseInt(pageSize),
+    });
+
+    res.json({
+      success: true,
+      data: {
+        providers,
+        pagination: {
+          total,
+          page: parseInt(page),
+          pageSize: parseInt(pageSize),
+        },
+      },
+    });
   } catch (err) {
-    next(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
-// List all providers + KYC status
-exports.getAllProviders = async (req, res, next) => {
+// --- 4. UPDATE PROVIDER KYC STATUS (approve/reject) ---
+// PATCH /api/admin/providers/:providerId/kyc
+exports.updateProviderKYC = async (req, res) => {
+  const { providerId } = req.params;
+  const { kycStatus, rejectionReason } = req.body;
   try {
-    const providers = await Provider.findAll({
-      include: [{ model: User, attributes: ["name", "email", "phone"] }],
-      order: [["createdAt", "DESC"]],
+    const provider = await Provider.findByPk(providerId, {
+      include: [{ model: User }],
     });
-    res.json({ success: true, data: providers });
+    if (!provider)
+      return res
+        .status(404)
+        .json({ success: false, error: "Provider not found" });
+
+    if (!["verified", "rejected", "pending"].includes(kycStatus)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid KYC status" });
+    }
+
+    provider.kycStatus = kycStatus;
+    provider.rejectionReason =
+      kycStatus === "rejected" ? rejectionReason : null;
+    await provider.save();
+
+    // Optionally update User status
+    if (provider.User) {
+      provider.User.status = kycStatus === "verified" ? "active" : kycStatus;
+      await provider.User.save();
+    }
+
+    // Return updated provider with user
+    const updatedProvider = await Provider.findByPk(providerId, {
+      include: [{ model: User }],
+    });
+    return res.status(200).json({ success: true, data: updatedProvider });
   } catch (err) {
-    next(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// --- 5. APPROVE/REJECT SINGLE GARAGE IMAGE ---
+exports.updateGarageImageStatus = async (req, res) => {
+  const { providerId, imageId } = req.params;
+  const { status } = req.body; // "approved" or "rejected"
+  if (!["approved", "rejected"].includes(status))
+    return res.status(400).json({ success: false, error: "Invalid status" });
+
+  try {
+    const doc = await Document.findOne({
+      where: { id: imageId, providerId, type: "garage_image" },
+    });
+    if (!doc)
+      return res
+        .status(404)
+        .json({ success: false, error: "Garage image not found" });
+
+    doc.status = status;
+    await doc.save();
+
+    return res.json({ success: true, data: { providerId, imageId, status } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// --- 6. BULK APPROVE/REJECT ALL GARAGE IMAGES ---
+exports.bulkUpdateGarageImages = async (req, res, next, status) => {
+  const { providerId } = req.params;
+  try {
+    const images = await Document.update(
+      { status },
+      { where: { providerId, type: "garage_image" } }
+    );
+    return res.json({ success: true, data: { providerId } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// --- 7. APPROVE/REJECT SINGLE KYC DOCUMENT ---
+exports.updateDocumentStatus = async (req, res) => {
+  const { providerId, documentId } = req.params;
+  const { status } = req.body; // "approved" or "rejected"
+  if (!["approved", "rejected"].includes(status))
+    return res.status(400).json({ success: false, error: "Invalid status" });
+
+  try {
+    const doc = await Document.findOne({
+      where: { id: documentId, providerId },
+    });
+    if (!doc)
+      return res
+        .status(404)
+        .json({ success: false, error: "Document not found" });
+
+    doc.status = status;
+    await doc.save();
+
+    return res.json({
+      success: true,
+      data: { providerId, documentId, status },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };

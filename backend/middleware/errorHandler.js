@@ -1,4 +1,9 @@
-module.exports = (err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: err.message });
+module.exports = (roles = []) => {
+  if (typeof roles === "string") roles = [roles];
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    next();
+  };
 };

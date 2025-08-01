@@ -1,12 +1,21 @@
+// routes/mechanicRoutes.js
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/mechanicController");
-const authenticate = require("../middleware/authenticate");
+const mechanicController = require("../controllers/mechanicController");
+const { uploadSingle } = require("../middleware/multerDocument");
+const authorize = require("../middleware/authorize");
 
-router.post("/", authenticate, controller.addMechanic);
-router.get("/", authenticate, controller.getMechanics);
-router.get("/:id", authenticate, controller.getMechanicById);
-router.put("/:id", authenticate, controller.updateMechanic);
-router.delete("/:id", authenticate, controller.deleteMechanic);
+// All routes below require provider role
+router.use(authorize("provider"));
+
+router.get("/", mechanicController.listMechanics);
+router.post("/", uploadSingle, mechanicController.addMechanic);
+router.get("/:id", mechanicController.getMechanic);
+router.put("/:id", uploadSingle, mechanicController.updateMechanic);
+router.delete("/:id", mechanicController.deleteMechanic);
+router.post("/:id/reset-password", mechanicController.resetPassword);
+
+// Extra: get mechanic by userId (for provider==mechanic dual-role UX)
+router.get("/user/:userId", mechanicController.getMechanicByUserId);
 
 module.exports = router;

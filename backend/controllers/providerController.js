@@ -110,7 +110,7 @@ exports.getProviderById = async (req, res, next) => {
       providerId: provider.id,
     });
   } catch (err) {
-    next(err);
+    next("error from providerController.js: " + err);
   }
 };
 

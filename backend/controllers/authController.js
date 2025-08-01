@@ -4,6 +4,20 @@ const config = require("../config/config");
 const admin = require("../config/firebaseAdmin");
 const bcrypt = require("bcrypt");
 
+// Helper: fetch provider details for a user
+async function getProviderDetails(userId) {
+  let provider = await Provider.findOne({ where: { userId } });
+  if (!provider) {
+    // Defensive: ensure provider record exists for legacy/fresh
+    provider = await Provider.create({
+      userId,
+      kycStatus: "pending",
+      status: "pending",
+    });
+  }
+  return provider;
+}
+
 // Register (Customer or Provider)
 exports.register = async (req, res, next) => {
   try {
@@ -31,16 +45,24 @@ exports.register = async (req, res, next) => {
     });
 
     // If provider, create Provider record with pending status
+    let providerData = null;
     if (role === "provider") {
-      await Provider.create({
+      providerData = await Provider.create({
         userId: user.id,
         kycStatus: "pending",
         status: "pending",
       });
     }
 
-    // After registration, frontend should redirect to OTP verification page
-    res.status(201).json({ success: true, data: user, next: "verify-otp" });
+    // Return minimal user + provider
+    res.status(201).json({
+      success: true,
+      data: {
+        ...user.toJSON(),
+        provider: providerData ? providerData.toJSON() : undefined,
+      },
+      next: "verify-otp",
+    });
   } catch (err) {
     next(err);
   }
@@ -62,28 +84,28 @@ exports.login = async (req, res, next) => {
 
     const user = await User.findOne({
       where: phone ? { phone } : { email },
+      attributes: { exclude: ["password"] },
     });
-    if (!user) return res.status(404).json({ error: "User not found", user });
 
-    const valid = await bcrypt.compare(password, user.password);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Fetch password hash for checking (separate for security)
+    const userWithPassword = await User.findOne({
+      where: { id: user.id },
+      attributes: ["id", "password"],
+    });
+    const valid = await bcrypt.compare(password, userWithPassword.password);
     if (!valid) return res.status(401).json({ error: "Invalid password" });
 
     const secret = process.env.JWT_SECRET || config.jwtSecret;
-    console.log("password Secret:", user.password);
 
-    // ...inside login and verifyOtp, after finding user...
-    let providerId = null;
+    // Always fetch Provider info if provider role
+    let provider = null;
     if (user.role === "provider") {
-      let provider = await Provider.findOne({ where: { userId: user.id } });
-      if (!provider) {
-        provider = await Provider.create({
-          userId: user.id,
-          kycStatus: "pending",
-          status: "pending",
-        });
-      }
-      providerId = provider.id;
+      provider = await getProviderDetails(user.id);
     }
+
+    // OTP not verified - must send OTP
     if (!user.isOtpVerified || !user.otpVerifiedAt) {
       const token = jwt.sign({ id: user.id, role: user.role }, secret, {
         expiresIn: "1d",
@@ -92,17 +114,16 @@ exports.login = async (req, res, next) => {
         success: true,
         next: "verify-otp",
         token,
-
         user: {
           ...user.toJSON(),
-          providerId,
+          provider: provider ? provider.toJSON() : undefined,
         },
       });
     }
 
+    // Check if OTP is stale (different day)
     const now = new Date();
     const lastVerified = new Date(user.otpVerifiedAt);
-
     if (
       now.getUTCDate() !== lastVerified.getUTCDate() ||
       now.getUTCMonth() !== lastVerified.getUTCMonth() ||
@@ -111,7 +132,6 @@ exports.login = async (req, res, next) => {
       user.isOtpVerified = false;
       user.otpVerifiedAt = null;
       await user.save();
-
       const token = jwt.sign({ id: user.id, role: user.role }, secret, {
         expiresIn: "1d",
       });
@@ -121,7 +141,7 @@ exports.login = async (req, res, next) => {
         token,
         user: {
           ...user.toJSON(),
-          providerId,
+          provider: provider ? provider.toJSON() : undefined,
         },
       });
     }
@@ -130,31 +150,30 @@ exports.login = async (req, res, next) => {
       expiresIn: "1d",
     });
 
-    if (user.role === "provider" && !user.onboardingComplete) {
+    // Provider: Always include provider record with kycStatus
+    if (user.role === "provider") {
       return res.status(200).json({
         success: true,
-        next: "onboarding",
         token,
         user: {
           ...user.toJSON(),
-          providerId,
+          provider: provider ? provider.toJSON() : undefined,
         },
       });
     }
 
-    res.json({
+    // Mechanic or Customer
+    return res.status(200).json({
       success: true,
       token,
-      user: {
-        ...user.toJSON(),
-        providerId,
-      },
+      user: user.toJSON(),
     });
   } catch (err) {
     next(err);
   }
 };
 
+// OTP Verification
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { idToken } = req.body;
@@ -162,7 +181,6 @@ exports.verifyOtp = async (req, res, next) => {
 
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const phoneNumber = decodedToken.phone_number;
-
     if (!phoneNumber)
       return res.status(400).json({ error: "Phone number not found in token" });
 
@@ -173,19 +191,9 @@ exports.verifyOtp = async (req, res, next) => {
     user.otpVerifiedAt = new Date();
     await user.save();
 
-    // Always fetch providerId if provider
-    // ...inside login and verifyOtp, after finding user...
-    let providerId = null;
+    let provider = null;
     if (user.role === "provider") {
-      let provider = await Provider.findOne({ where: { userId: user.id } });
-      if (!provider) {
-        provider = await Provider.create({
-          userId: user.id,
-          kycStatus: "pending",
-          status: "pending",
-        });
-      }
-      providerId = provider.id;
+      provider = await getProviderDetails(user.id);
     }
 
     const token = jwt.sign(
@@ -199,7 +207,7 @@ exports.verifyOtp = async (req, res, next) => {
       token,
       user: {
         ...user.toJSON(),
-        providerId,
+        provider: provider ? provider.toJSON() : undefined,
       },
     });
   } catch (err) {
@@ -207,17 +215,28 @@ exports.verifyOtp = async (req, res, next) => {
   }
 };
 
+// Always return provider record in getCurrentUser if applicable
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ["password"] },
     });
-
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ success: true, user });
+    let provider = null;
+    if (user.role === "provider") {
+      provider = await getProviderDetails(user.id);
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        ...user.toJSON(),
+        provider: provider ? provider.toJSON() : undefined,
+      },
+    });
   } catch (error) {
     console.error("Error fetching current user:", error);
     res.status(500).json({ error: "Server error" });
